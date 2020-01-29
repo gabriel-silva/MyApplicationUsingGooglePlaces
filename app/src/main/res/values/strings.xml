@@ -3,4 +3,6 @@
     <string name="navigation_gps">Radar</string>
     <string name="navigation_list">Lista</string>
     <string name="navigation_account">Perfil</string>
+    <string name="facebook_app_id">111731183614281</string>
+    <string name="fb_login_protocol_scheme">fb111731183614281</string>
 </resources>
