@@ -1,23 +1,24 @@
 package com.myapplicationusinggoogleplaces
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.facebook.*
 import com.facebook.appevents.AppEventsLogger
-import com.facebook.login.widget.LoginButton
-import java.util.*
 import com.facebook.login.LoginResult
+import com.facebook.login.widget.LoginButton
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
 
     private var callbackManager: CallbackManager? = null
     private var loginButton: LoginButton? = null
-    private var accessTokenTracker: AccessTokenTracker? = null
+    private lateinit var imageViewFacebook: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,8 +28,8 @@ class MainActivity : AppCompatActivity() {
         AppEventsLogger.activateApp(this)
 
         this.callbackManager = CallbackManager.Factory.create()
-        this.loginButton = findViewById(R.id.login_button) as LoginButton
-        this.loginButton?.setReadPermissions(Arrays.asList("email", "public_profile"))
+        this.loginButton = findViewById(R.id.login_button)
+        this.loginButton?.setReadPermissions(listOf("email", "public_profile"))
 
         // Callback registration
         this.loginButton?.registerCallback(
@@ -43,12 +44,12 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onError(error: FacebookException?) {
-                    Log.d("onSucess", "" + error.toString())
+                    Log.d("onError", "" + error.toString())
                 }
 
             })
 
-        this.accessTokenTracker = object : AccessTokenTracker(){
+        var accessTokenTracker: AccessTokenTracker = object : AccessTokenTracker(){
             override fun onCurrentAccessTokenChanged(oldAccessToken: AccessToken?, currentAccessToken: AccessToken?) {
                 if(currentAccessToken != null) {
                     loadUserProfile(currentAccessToken)
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -72,6 +74,12 @@ class MainActivity : AppCompatActivity() {
                     var lastName: String? = jsonObject?.getString("last_name")
                     var id: String? = jsonObject?.getString("id")
                     val imageUrl = "https://graph.facebook.com/$id/picture?type=normal"
+
+                    imageViewFacebook = findViewById(R.id.image_facebook)
+                    Glide.with(getApplicationContext())
+                        .load(imageUrl)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(imageViewFacebook)
 
                     Log.e("onCompleted: ", "firstName: $firstName lastName: $lastName id: $id")
 
