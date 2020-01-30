@@ -2,8 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/navigation_gps"
-        android:icon="@drawable/ic_gps"
+        android:id="@+id/navigation_radar"
+        android:icon="@drawable/ic_radar"
         android:title="@string/navigation_gps" />
 
     <item
@@ -12,8 +12,8 @@
         android:title="@string/navigation_list" />
 
     <item
-        android:id="@+id/navigation_account"
-        android:icon="@drawable/ic_account"
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/ic_profile"
         android:title="@string/navigation_account" />
 
 </menu>

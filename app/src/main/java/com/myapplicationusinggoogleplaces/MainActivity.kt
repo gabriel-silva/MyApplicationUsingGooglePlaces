@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -18,7 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     private var callbackManager: CallbackManager? = null
     private var loginButton: LoginButton? = null
-    private lateinit var imageViewFacebook: ImageView
+    private var imageViewFacebook: ImageView? = null
+    private var textViewName: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +28,9 @@ class MainActivity : AppCompatActivity() {
 
         FacebookSdk.sdkInitialize(getApplicationContext())
         AppEventsLogger.activateApp(this)
+
+        this.imageViewFacebook = findViewById(R.id.image_facebook)
+        this.textViewName = findViewById(R.id.text_view_name)
 
         this.callbackManager = CallbackManager.Factory.create()
         this.loginButton = findViewById(R.id.login_button)
@@ -51,7 +56,10 @@ class MainActivity : AppCompatActivity() {
 
         var accessTokenTracker: AccessTokenTracker = object : AccessTokenTracker(){
             override fun onCurrentAccessTokenChanged(oldAccessToken: AccessToken?, currentAccessToken: AccessToken?) {
-                if(currentAccessToken != null) {
+                if(currentAccessToken == null) {
+                    imageViewFacebook?.setImageResource(0)
+                    textViewName?.setText("")
+                } else {
                     loadUserProfile(currentAccessToken)
                 }
             }
@@ -75,11 +83,12 @@ class MainActivity : AppCompatActivity() {
                     var id: String? = jsonObject?.getString("id")
                     val imageUrl = "https://graph.facebook.com/$id/picture?type=normal"
 
-                    imageViewFacebook = findViewById(R.id.image_facebook)
+                    textViewName?.setText("$firstName $lastName")
+
                     Glide.with(getApplicationContext())
                         .load(imageUrl)
                         .apply(RequestOptions.circleCropTransform())
-                        .into(imageViewFacebook)
+                        .into(imageViewFacebook!!)
 
                     Log.e("onCompleted: ", "firstName: $firstName lastName: $lastName id: $id")
 
