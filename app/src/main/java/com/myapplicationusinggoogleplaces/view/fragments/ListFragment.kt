@@ -1,4 +1,4 @@
-package com.myapplicationusinggoogleplaces.fragments
+package com.myapplicationusinggoogleplaces.view.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater

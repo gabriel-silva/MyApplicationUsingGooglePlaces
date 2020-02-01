@@ -1,4 +1,4 @@
-package com.myapplicationusinggoogleplaces
+package com.myapplicationusinggoogleplaces.view.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +12,7 @@ import com.facebook.*
 import com.facebook.appevents.AppEventsLogger
 import com.facebook.login.LoginResult
 import com.facebook.login.widget.LoginButton
+import com.myapplicationusinggoogleplaces.R
 import org.json.JSONException
 import org.json.JSONObject
 

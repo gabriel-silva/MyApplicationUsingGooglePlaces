@@ -1,4 +1,4 @@
-package com.myapplicationusinggoogleplaces.fragments
+package com.myapplicationusinggoogleplaces.view.fragments
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -18,21 +18,25 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.myapplicationusinggoogleplaces.R
+import com.myapplicationusinggoogleplaces.model.Results
 
 class RadarFragment : Fragment(), OnMapReadyCallback {
+
+    private val locationPermissionRequestCode = 1234
+    private val defaultZoom = 15f
 
     private lateinit var mMap: GoogleMap
     private var mLocationPermissionsGranted = false
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
-
-    private val FINE_LOCATION: String = Manifest.permission.ACCESS_FINE_LOCATION
-    private val COURSE_LOCATION: String = Manifest.permission.ACCESS_COARSE_LOCATION
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1234
-    private val DEFAULT_ZOOM = 15f
+    private var listResults: ArrayList<Results> = ArrayList()
+    private var latLng: LatLng = LatLng(0.0, 0.0)
+    private var placeType: String = "all"
 
     companion object {
         fun newInstance(): RadarFragment {
@@ -40,7 +44,11 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.radar_fragment, container, false)
     }
 
@@ -50,7 +58,8 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun getDeviceLocation() {
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext())
+        mFusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(getApplicationContext())
         try {
             if (mLocationPermissionsGranted) {
                 val location: Task<Location>? = mFusedLocationProviderClient?.lastLocation
@@ -59,7 +68,8 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
 
                         if (task.isSuccessful) {
                             val currentLocation: Location = task.result as Location
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), DEFAULT_ZOOM))
+                            latLng = LatLng(currentLocation.latitude, currentLocation.longitude)
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), defaultZoom))
                         } else {
                             Toast.makeText(getApplicationContext(), "unable to get current location", Toast.LENGTH_SHORT).show()
                         }
@@ -80,23 +90,22 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
 
     private fun getLocationPermission() {
         val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(getApplicationContext(), COURSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 mLocationPermissionsGranted = true
                 initMap()
             } else {
-                requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE)
+                requestPermissions(permissions, locationPermissionRequestCode)
             }
         } else {
-            requestPermissions(permissions, LOCATION_PERMISSION_REQUEST_CODE)
+            requestPermissions(permissions, locationPermissionRequestCode)
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String?>, grantResults: IntArray) {
         mLocationPermissionsGranted = false
         when (requestCode) {
-            LOCATION_PERMISSION_REQUEST_CODE -> {
+            locationPermissionRequestCode -> {
                 if (grantResults.isNotEmpty()) {
                     var i = 0
                     while (i < grantResults.size) {
@@ -120,14 +129,35 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
             getDeviceLocation()
 
             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
                 return
             }
 
             mMap.isMyLocationEnabled = true
             mMap.uiSettings.isMyLocationButtonEnabled = true
             mMap.uiSettings.isZoomControlsEnabled = true
+
+            for (i in listResults.indices) {
+                val markerOptions = MarkerOptions()
+                val googlePlace: Results = listResults[i]
+                val lat: Double? = googlePlace.geometry?.location?.lat?.toDouble()
+                val lng: Double? = googlePlace.geometry?.location?.lng?.toDouble()
+                val placeName: String? = googlePlace.name
+                val latLng = LatLng(lat!!, lng!!)
+                markerOptions.position(latLng)
+                markerOptions.title(placeName)
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                // adicionando o marker no map
+                googleMap.addMarker(markerOptions).showInfoWindow()
+                // movendo camera
+                googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f))
+                googleMap.uiSettings.isCompassEnabled = true
+                googleMap.uiSettings.isZoomControlsEnabled = true
+            }
+
+
         }
 
     }

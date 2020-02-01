@@ -41,7 +41,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MainActivityNavigation">
+        <activity android:name=".view.activity.NavigationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -49,11 +49,11 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".fragments.ListFragment"/>
-        <activity android:name=".fragments.ProfileFragment" />
-        <activity android:name=".fragments.RadarFragment" />
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".MainActivity" />
+        <activity android:name="com.myapplicationusinggoogleplaces.view.fragments.ListFragment"/>
+        <activity android:name="com.myapplicationusinggoogleplaces.view.fragments.ProfileFragment" />
+        <activity android:name="com.myapplicationusinggoogleplaces.view.fragments.RadarFragment" />
+        <activity android:name=".view.activity.LoginActivity" />
+        <activity android:name=".view.activity.MainActivity" />
 
     </application>
 
