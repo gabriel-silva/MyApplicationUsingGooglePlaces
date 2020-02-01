@@ -5,4 +5,13 @@
     <string name="navigation_account">Perfil</string>
     <string name="facebook_app_id">111731183614281</string>
     <string name="fb_login_protocol_scheme">fb111731183614281</string>
+    <string name="filter">Filtro</string>
+    <!--    <map linked="true">-->
+<!--        <entry key="all">Todos</entry>-->
+<!--        <entry key="airport">Aeroportos</entry>-->
+<!--        <entry key="restaurant">Restaurantes</entry>-->
+<!--        <entry key="bar">Baladas</entry>-->
+<!--        <entry key="supermarket">Supermercados</entry>-->
+<!--        <entry key="shopping_mall">Shopping Centers</entry>-->
+<!--    </map>-->
 </resources>
