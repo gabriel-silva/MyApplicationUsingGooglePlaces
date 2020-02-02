@@ -11,9 +11,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.Gson
 import com.myapplicationusinggoogleplaces.R
 import com.myapplicationusinggoogleplaces.contants.PlacesConstant
+import com.myapplicationusinggoogleplaces.model.MyPlaces
+import com.myapplicationusinggoogleplaces.model.Results
 import com.myapplicationusinggoogleplaces.service.MyPlacesService
 import com.myapplicationusinggoogleplaces.view.fragments.ListFragment
 import com.myapplicationusinggoogleplaces.view.fragments.ProfileFragment
@@ -28,6 +33,22 @@ class NavigationActivity : AppCompatActivity(),
     private var menu: Menu? = null
     private var placesType: Int = 0
     private var layout: LinearLayout? = null
+    private var locationsNames = arrayOf(
+        "Todos",
+        "Aeroportos",
+        "Restaurantes",
+        "Baladas",
+        "Supermercados",
+        "Shopping Centers"
+    )
+    private var options: HashMap<Int, String> = hashMapOf(
+        0 to "all",
+        1 to "airport",
+        2 to "restaurant",
+        3 to "bar",
+        4 to "supermarket",
+        5 to "shopping_mall"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +63,11 @@ class NavigationActivity : AppCompatActivity(),
             this.toolbar?.title = "Radar"
             openFragment(RadarFragment())
         }
+
+        PlacesConstant.latLng.observe(this, Observer<LatLng> {
+            Log.e("IT", "$it")
+            getLocations(this, options, placesType, it)
+        })
 
         setSupportActionBar(this.toolbar)
     }
@@ -76,39 +102,13 @@ class NavigationActivity : AppCompatActivity(),
     }
 
     fun chooseLocations(context: Context) {
-
-        val locationsNames = arrayOf(
-            "Todos",
-            "Aeroportos",
-            "Restaurantes",
-            "Baladas",
-            "Supermercados",
-            "Shopping Centers"
-        )
-        val options: HashMap<Int, String> = hashMapOf(
-            0 to "all",
-            1 to "airport",
-            2 to "restaurant",
-            3 to "bar",
-            4 to "supermarket",
-            5 to "shopping_mall"
-        )
-
         val builder: AlertDialog.Builder = AlertDialog.Builder(context)
         builder.setTitle("Categorias")
         builder.setSingleChoiceItems(locationsNames, placesType) { dialog, which ->
             placesType = which
             Log.e("Options", "${options.getValue(which)}")
             Log.e("latLng", "${PlacesConstant.latLng.value!!}")
-
-            layout?.visibility = View.VISIBLE
-            object : Thread() {
-                override fun run() {
-                    PlacesConstant.results.postValue(MyPlacesService.getResults(context, PlacesConstant.latLng.value!!, options.getValue(which)))
-                    runOnUiThread { layout?.visibility = View.GONE }
-                }
-            }.start()
-
+            getLocations(this, options, placesType, PlacesConstant.latLng.value!!)
             dialog.dismiss()
         }
 
@@ -116,6 +116,59 @@ class NavigationActivity : AppCompatActivity(),
         val dialog = builder.create()
         dialog.show()
 
+    }
+
+    private fun getLocations(
+        context: Context,
+        options: HashMap<Int, String>,
+        placesType: Int,
+        latLng: LatLng
+    ) {
+        layout?.visibility = View.VISIBLE
+        object : Thread() {
+            override fun run() {
+
+                val listResults = mutableListOf<Results>()
+                val arrayResponse = mutableListOf<String>()
+                when (options.getValue(placesType)) {
+                    "all" -> {
+                        for (options in options.values) {
+                            if (options != "all") {
+                                arrayResponse.add(
+                                    MyPlacesService.getResult(
+                                        context,
+                                        latLng,
+                                        options
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    else -> {
+                        arrayResponse.add(
+                            MyPlacesService.getResult(
+                                context,
+                                latLng,
+                                options.getValue(placesType)
+                            )
+                        )
+                    }
+                }
+
+                Log.e("array", "ARRAY: $arrayResponse")
+
+                for (s in arrayResponse) {
+                    val gson = Gson()
+                    var myPlaces = gson.fromJson(s, MyPlaces::class.java)
+                    for (results in myPlaces.results!!) {
+                        listResults.add(results)
+                    }
+                }
+
+                PlacesConstant.results.postValue(listResults)
+                runOnUiThread { layout?.visibility = View.GONE }
+            }
+        }.start()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

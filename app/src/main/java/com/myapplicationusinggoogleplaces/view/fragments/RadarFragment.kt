@@ -132,6 +132,7 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
             mMap.uiSettings.isZoomControlsEnabled = true
 
             PlacesConstant.results.observe(this, Observer<MutableList<Results>> {
+                googleMap.clear()
 
                 for (results in it) {
                     val markerOptions = MarkerOptions()
