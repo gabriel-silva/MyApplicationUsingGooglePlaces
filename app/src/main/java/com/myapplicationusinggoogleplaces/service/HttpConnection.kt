@@ -1,5 +1,6 @@
 package com.myapplicationusinggoogleplaces.service
 
+import android.util.Log
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -10,12 +11,13 @@ class HttpConnection {
 
     companion object {
 
-        fun getData(url: URL): String {
+        fun getData(url: String): String {
 
             var urlConnection: HttpURLConnection? = null
             val stringBuilder = StringBuilder()
             try {
-                urlConnection = url.openConnection() as HttpURLConnection
+                Log.e("URL: ", "$url")
+                urlConnection = URL(url).openConnection() as HttpURLConnection
 
                 val responseCode = urlConnection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {

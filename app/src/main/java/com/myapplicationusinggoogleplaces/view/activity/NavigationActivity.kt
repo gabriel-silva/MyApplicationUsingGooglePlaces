@@ -1,18 +1,24 @@
 package com.myapplicationusinggoogleplaces.view.activity
 
-import android.content.DialogInterface
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.myapplicationusinggoogleplaces.R
+import com.myapplicationusinggoogleplaces.contants.PlacesConstant
+import com.myapplicationusinggoogleplaces.service.MyPlacesService
 import com.myapplicationusinggoogleplaces.view.fragments.ListFragment
 import com.myapplicationusinggoogleplaces.view.fragments.ProfileFragment
 import com.myapplicationusinggoogleplaces.view.fragments.RadarFragment
+
 
 class NavigationActivity : AppCompatActivity(),
     BottomNavigationView.OnNavigationItemSelectedListener {
@@ -20,6 +26,8 @@ class NavigationActivity : AppCompatActivity(),
     private var navigationView: BottomNavigationView? = null
     private var toolbar: Toolbar? = null
     private var menu: Menu? = null
+    private var placesType: Int = 0
+    private var layout: LinearLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,10 +36,11 @@ class NavigationActivity : AppCompatActivity(),
         this.toolbar = findViewById(R.id.toolbar)
         this.navigationView = findViewById(R.id.navigationView)
         this.navigationView?.setOnNavigationItemSelectedListener(this)
+        this.layout = findViewById(R.id.llProgressBar)
 
         if (savedInstanceState == null) {
             this.toolbar?.title = "Radar"
-            openFragment(RadarFragment.newInstance())
+            openFragment(RadarFragment())
         }
 
         setSupportActionBar(this.toolbar)
@@ -42,17 +51,17 @@ class NavigationActivity : AppCompatActivity(),
             R.id.navigation_radar -> {
                 this.toolbar?.title = "Radar"
                 this.menu?.findItem(R.id.filter)?.isVisible = true
-                openFragment(RadarFragment.newInstance())
+                openFragment(RadarFragment())
             }
             R.id.navigation_list -> {
                 this.toolbar?.title = "Lista"
                 this.menu?.findItem(R.id.filter)?.isVisible = true
-                openFragment(ListFragment.newInstance())
+                openFragment(ListFragment())
             }
             R.id.navigation_profile -> {
                 this.toolbar?.title = "Perfil"
                 this.menu?.findItem(R.id.filter)?.isVisible = false
-                openFragment(ProfileFragment.newInstance())
+                openFragment(ProfileFragment())
             }
         }
 
@@ -66,27 +75,56 @@ class NavigationActivity : AppCompatActivity(),
         return true
     }
 
+    fun chooseLocations(context: Context) {
+
+        val locationsNames = arrayOf(
+            "Todos",
+            "Aeroportos",
+            "Restaurantes",
+            "Baladas",
+            "Supermercados",
+            "Shopping Centers"
+        )
+        val options: HashMap<Int, String> = hashMapOf(
+            0 to "all",
+            1 to "airport",
+            2 to "restaurant",
+            3 to "bar",
+            4 to "supermarket",
+            5 to "shopping_mall"
+        )
+
+        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+        builder.setTitle("Categorias")
+        builder.setSingleChoiceItems(locationsNames, placesType) { dialog, which ->
+            placesType = which
+            Log.e("Options", "${options.getValue(which)}")
+            Log.e("latLng", "${PlacesConstant.latLng.value!!}")
+
+            layout?.visibility = View.VISIBLE
+            object : Thread() {
+                override fun run() {
+                    PlacesConstant.results.postValue(MyPlacesService.getResults(context, PlacesConstant.latLng.value!!, options.getValue(which)))
+                    runOnUiThread { layout?.visibility = View.GONE }
+                }
+            }.start()
+
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("Cancelar", null)
+        val dialog = builder.create()
+        dialog.show()
+
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == R.id.filter) {
-            chooseLocations()
+            chooseLocations(this)
             return true
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun chooseLocations() {
-
-        val locationsNames = arrayOf("Todos", "Aeroportos", "Restaurantes", "Baladas", "Supermercados", "Shopping Centers")
-        val locations = arrayOf("all", "airport", "restaurant", "bar", "supermarket", "shopping_mall")
-
-        val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-        builder.setTitle("Categorias")
-        builder.setItems(locationsNames, DialogInterface.OnClickListener { dialog, which ->
-            // the user clicked on colors[which]
-        })
-        builder.show()
-
     }
 
     private fun openFragment(fragment: Fragment) {

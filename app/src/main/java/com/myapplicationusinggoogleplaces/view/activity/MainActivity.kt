@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        FacebookSdk.sdkInitialize(getApplicationContext())
+        FacebookSdk.sdkInitialize(applicationContext)
         AppEventsLogger.activateApp(this)
 
         this.imageViewFacebook = findViewById(R.id.image_facebook)

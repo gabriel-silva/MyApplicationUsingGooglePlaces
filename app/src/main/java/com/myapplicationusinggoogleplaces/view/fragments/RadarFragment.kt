@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.facebook.FacebookSdk.getApplicationContext
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -24,6 +25,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
 import com.myapplicationusinggoogleplaces.R
+import com.myapplicationusinggoogleplaces.contants.PlacesConstant
 import com.myapplicationusinggoogleplaces.model.Results
 
 class RadarFragment : Fragment(), OnMapReadyCallback {
@@ -34,15 +36,6 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private var mLocationPermissionsGranted = false
     private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
-    private var listResults: ArrayList<Results> = ArrayList()
-    private var latLng: LatLng = LatLng(0.0, 0.0)
-    private var placeType: String = "all"
-
-    companion object {
-        fun newInstance(): RadarFragment {
-            return RadarFragment()
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -68,7 +61,7 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
 
                         if (task.isSuccessful) {
                             val currentLocation: Location = task.result as Location
-                            latLng = LatLng(currentLocation.latitude, currentLocation.longitude)
+                            PlacesConstant.latLng.value = LatLng(currentLocation.latitude, currentLocation.longitude)
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(currentLocation.latitude, currentLocation.longitude), defaultZoom))
                         } else {
                             Toast.makeText(getApplicationContext(), "unable to get current location", Toast.LENGTH_SHORT).show()
@@ -83,7 +76,7 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun initMap() {
+    fun initMap() {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
@@ -138,25 +131,29 @@ class RadarFragment : Fragment(), OnMapReadyCallback {
             mMap.uiSettings.isMyLocationButtonEnabled = true
             mMap.uiSettings.isZoomControlsEnabled = true
 
-            for (i in listResults.indices) {
-                val markerOptions = MarkerOptions()
-                val googlePlace: Results = listResults[i]
-                val lat: Double? = googlePlace.geometry?.location?.lat?.toDouble()
-                val lng: Double? = googlePlace.geometry?.location?.lng?.toDouble()
-                val placeName: String? = googlePlace.name
-                val latLng = LatLng(lat!!, lng!!)
-                markerOptions.position(latLng)
-                markerOptions.title(placeName)
-                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-                // adicionando o marker no map
-                googleMap.addMarker(markerOptions).showInfoWindow()
-                // movendo camera
-                googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f))
-                googleMap.uiSettings.isCompassEnabled = true
-                googleMap.uiSettings.isZoomControlsEnabled = true
-            }
+            PlacesConstant.results.observe(this, Observer<MutableList<Results>> {
 
+                for (results in it) {
+                    val markerOptions = MarkerOptions()
+                    val googlePlace: Results = results
+                    val lat: Double? = googlePlace.geometry?.location?.lat?.toDouble()
+                    val lng: Double? = googlePlace.geometry?.location?.lng?.toDouble()
+                    val placeName: String? = googlePlace.name
+                    val latLng = LatLng(lat!!, lng!!)
+                    markerOptions.position(latLng)
+                    markerOptions.title(placeName)
+                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                    // adicionando o marker no map
+                    googleMap.addMarker(markerOptions)
+                    // movendo camera
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(PlacesConstant.latLng.value, 12.0f))
+                    googleMap.uiSettings.isCompassEnabled = true
+                    googleMap.isMyLocationEnabled = true
+                    googleMap.uiSettings.isMyLocationButtonEnabled = true
+                    googleMap.uiSettings.isZoomControlsEnabled = true
+                }
+
+            })
 
         }
 

@@ -43,7 +43,7 @@ class AppExecutor(
                         sInstance =
                             AppExecutor(
                                 Executors.newSingleThreadExecutor(),
-                                Executors.newFixedThreadPool(3),
+                                Executors.newFixedThreadPool(10),
                                 MainThreadExecutor()
                             )
                     }

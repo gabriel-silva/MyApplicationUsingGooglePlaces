@@ -13,10 +13,4 @@ class ListFragment : Fragment() {
         return inflater.inflate(R.layout.list_fragment, container, false)
     }
 
-    companion object {
-        fun newInstance(): ListFragment {
-            return ListFragment()
-        }
-    }
-
 }
