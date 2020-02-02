@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -65,7 +66,6 @@ class NavigationActivity : AppCompatActivity(),
         }
 
         PlacesConstant.latLng.observe(this, Observer<LatLng> {
-            Log.e("IT", "$it")
             getLocations(this, options, placesType, it)
         })
 
@@ -174,7 +174,11 @@ class NavigationActivity : AppCompatActivity(),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val id = item.itemId
         if (id == R.id.filter) {
-            chooseLocations(this)
+            if(PlacesConstant.latLng.value != null) {
+                chooseLocations(this)
+            } else {
+                Toast.makeText(this, "Parece que sua localização está desativada! :(", Toast.LENGTH_LONG).show()
+            }
             return true
         }
         return super.onOptionsItemSelected(item)
